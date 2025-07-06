@@ -1,0 +1,754 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Gerenciamento de Produtos - Concessionária{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Cabeçalho -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="text-primary mb-0">
+                <i class="fas fa-cogs me-2"></i>Gerenciamento de Produtos
+            </h2>
+            <p class="text-muted">Marcas, Modelos e Cores</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalAdicionarMarca">
+                <i class="fas fa-plus me-2"></i>Nova Marca
+            </button>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalAdicionarModelo">
+                <i class="fas fa-plus me-2"></i>Novo Modelo
+            </button>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalAdicionarCor">
+                <i class="fas fa-plus me-2"></i>Nova Cor
+            </button>
+        </div>
+    </div>
+
+    <!-- Estatísticas -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card border-primary">
+                <div class="card-body text-center">
+                    <h3 class="text-primary">{{ estatisticas.total_marcas }}</h3>
+                    <p class="text-muted mb-0">Total de Marcas</p>
+                    <small class="text-primary">{{ estatisticas.marcas_ativas }} ativas</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-primary">
+                <div class="card-body text-center">
+                    <h3 class="text-primary">{{ estatisticas.total_modelos }}</h3>
+                    <p class="text-muted mb-0">Total de Modelos</p>
+                    <small class="text-primary">{{ estatisticas.modelos_ativos }} ativos</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-primary">
+                <div class="card-body text-center">
+                    <h3 class="text-primary">{{ estatisticas.total_cores }}</h3>
+                    <p class="text-muted mb-0">Total de Cores</p>
+                    <small class="text-primary">{{ estatisticas.cores_ativas }} ativas</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mensagens -->
+    {% if messages %}
+    <div class="alert-container">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Abas de Navegação -->
+    <ul class="nav nav-tabs nav-fill mb-4" id="gerenciamentoTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link {% if tab_ativa == 'marcas' %}active{% endif %}" 
+                    id="marcas-tab" 
+                    data-bs-toggle="tab" 
+                    data-bs-target="#marcas" 
+                    type="button" 
+                    role="tab">
+                <i class="fas fa-trademark me-2"></i>Marcas
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link {% if tab_ativa == 'modelos' %}active{% endif %}" 
+                    id="modelos-tab" 
+                    data-bs-toggle="tab" 
+                    data-bs-target="#modelos" 
+                    type="button" 
+                    role="tab">
+                <i class="fas fa-car me-2"></i>Modelos
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link {% if tab_ativa == 'cores' %}active{% endif %}" 
+                    id="cores-tab" 
+                    data-bs-toggle="tab" 
+                    data-bs-target="#cores" 
+                    type="button" 
+                    role="tab">
+                <i class="fas fa-palette me-2"></i>Cores
+            </button>
+        </li>
+    </ul>
+
+    <!-- Conteúdo das Abas -->
+    <div class="tab-content" id="gerenciamentoTabsContent">
+        
+        <!-- Aba Marcas -->
+        <div class="tab-pane fade {% if tab_ativa == 'marcas' %}show active{% endif %}" 
+             id="marcas" 
+             role="tabpanel">
+            
+            <!-- Filtro Marcas -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <form class="row g-3" method="GET">
+                        <input type="hidden" name="tab" value="marcas">
+                        <div class="col-md-10">
+                            <div class="input-group">
+                                <span class="input-group-text bg-primary text-white">
+                                    <i class="fas fa-search"></i>
+                                </span>
+                                <input type="text" 
+                                       class="form-control" 
+                                       name="search_marca"
+                                       placeholder="Pesquisar por nome ou país"
+                                       value="{{ search_marca }}">
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-search me-2"></i>Buscar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Tabela Marcas -->
+            <div class="card shadow-sm">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr class="bg-dark text-white">
+                                    <th colspan="5" class="ps-3">Marcas Cadastradas</th>
+                                </tr>
+                                <tr class="bg-primary text-white">
+                                    <th scope="col" class="ps-3">Nome</th>
+                                    <th scope="col">País de Origem</th>
+                                    <th scope="col">Status</th>
+                                    <th scope="col">Data Criação</th>
+                                    <th scope="col" class="text-end pe-3">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for marca in marcas %}
+                                <tr>
+                                    <td class="ps-3">
+                                        <div class="d-flex align-items-center">
+                                            <div class="bg-primary text-white rounded-circle me-2 d-flex align-items-center justify-content-center" 
+                                                 style="width: 40px; height: 40px">
+                                                <i class="fas fa-trademark"></i>
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold">{{ marca.nome }}</div>
+                                                <small class="text-muted">ID: #{{ marca.pk }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ marca.pais_origem|default:"-" }}</td>
+                                    <td>
+                                        <span class="badge {% if marca.ativo %}bg-primary{% else %}bg-danger{% endif %}">
+                                            {{ marca.ativo|yesno:"Ativo,Inativo" }}
+                                        </span>
+                                    </td>
+                                    <td>{{ marca.data_criacao|date:"d/m/Y H:i" }}</td>
+                                    <td class="text-end pe-3">
+                                        <div class="btn-group">
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-danger"
+                                                    onclick="confirmarRemocao('{{ marca.nome }}', '{% url 'administracao:deletar_marca' marca.pk %}')"
+                                                    data-bs-toggle="tooltip"
+                                                    title="Remover marca">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-4">
+                                        <div class="text-muted">
+                                            <i class="fas fa-trademark fa-2x mb-3"></i>
+                                            <p>Nenhuma marca encontrada.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Aba Modelos -->
+        <div class="tab-pane fade {% if tab_ativa == 'modelos' %}show active{% endif %}" 
+             id="modelos" 
+             role="tabpanel">
+            
+            <!-- Filtro Modelos -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <form class="row g-3" method="GET">
+                        <input type="hidden" name="tab" value="modelos">
+                        <div class="col-md-10">
+                            <div class="input-group">
+                                <span class="input-group-text bg-primary text-white">
+                                    <i class="fas fa-search"></i>
+                                </span>
+                                <input type="text" 
+                                       class="form-control" 
+                                       name="search_modelo"
+                                       placeholder="Pesquisar por modelo, marca ou categoria"
+                                       value="{{ search_modelo }}">
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-search me-2"></i>Buscar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Tabela Modelos -->
+            <div class="card shadow-sm">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr class="bg-dark text-white">
+                                    <th colspan="6" class="ps-3">Modelos Cadastrados</th>
+                                </tr>
+                                <tr class="bg-primary text-white">
+                                    <th scope="col" class="ps-3">Modelo</th>
+                                    <th scope="col">Marca</th>
+                                    <th scope="col">Categoria</th>
+                                    <th scope="col">Status</th>
+                                    <th scope="col">Data Criação</th>
+                                    <th scope="col" class="text-end pe-3">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for modelo in modelos %}
+                                <tr>
+                                    <td class="ps-3">
+                                        <div class="d-flex align-items-center">
+                                            <div class="bg-primary text-white rounded-circle me-2 d-flex align-items-center justify-content-center" 
+                                                 style="width: 40px; height: 40px">
+                                                <i class="fas fa-car"></i>
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold">{{ modelo.nome }}</div>
+                                                <small class="text-muted">ID: #{{ modelo.pk }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ modelo.marca.nome }}</td>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ modelo.get_categoria_display }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge {% if modelo.ativo %}bg-primary{% else %}bg-danger{% endif %}">
+                                            {{ modelo.ativo|yesno:"Ativo,Inativo" }}
+                                        </span>
+                                    </td>
+                                    <td>{{ modelo.data_criacao|date:"d/m/Y H:i" }}</td>
+                                    <td class="text-end pe-3">
+                                        <div class="btn-group">
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-danger"
+                                                    onclick="confirmarRemocaoModelo('{{ modelo.nome }}', '{% url 'administracao:deletar_modelo' modelo.pk %}')"
+                                                    data-bs-toggle="tooltip"
+                                                    title="Remover modelo">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center py-4">
+                                        <div class="text-muted">
+                                            <i class="fas fa-car fa-2x mb-3"></i>
+                                            <p>Nenhum modelo encontrado.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Aba Cores -->
+        <div class="tab-pane fade {% if tab_ativa == 'cores' %}show active{% endif %}" 
+             id="cores" 
+             role="tabpanel">
+            
+            <!-- Filtro Cores -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <form class="row g-3" method="GET">
+                        <input type="hidden" name="tab" value="cores">
+                        <div class="col-md-10">
+                            <div class="input-group">
+                                <span class="input-group-text bg-primary text-white">
+                                    <i class="fas fa-search"></i>
+                                </span>
+                                <input type="text" 
+                                       class="form-control" 
+                                       name="search_cor"
+                                       placeholder="Pesquisar por nome da cor"
+                                       value="{{ search_cor }}">
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-search me-2"></i>Buscar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Tabela Cores -->
+            <div class="card shadow-sm">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr class="bg-dark text-white">
+                                    <th colspan="4" class="ps-3">Cores Cadastradas</th>
+                                </tr>
+                                <tr class="bg-primary text-white">
+                                    <th scope="col" class="ps-3">Cor</th>
+                                    <th scope="col">Código Hex</th>
+                                    <th scope="col">Status</th>
+                                    <th scope="col" class="text-end pe-3">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for cor in cores %}
+                                <tr>
+                                    <td class="ps-3">
+                                        <div class="d-flex align-items-center">
+                                            <div class="rounded-circle me-3 border" 
+                                                 style="width: 40px; height: 40px; background-color: {{ cor.codigo_hex|default:'#6c757d' }};">
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold">{{ cor.nome }}</div>
+                                                <small class="text-muted">ID: #{{ cor.pk }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if cor.codigo_hex %}
+                                            <code>{{ cor.codigo_hex }}</code>
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge {% if cor.ativo %}bg-primary{% else %}bg-danger{% endif %}">
+                                            {{ cor.ativo|yesno:"Ativo,Inativo" }}
+                                        </span>
+                                    </td>
+                                    <td class="text-end pe-3">
+                                        <div class="btn-group">
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-danger"
+                                                    onclick="confirmarRemocaoCor('{{ cor.nome }}', '{% url 'administracao:deletar_cor' cor.pk %}')"
+                                                    data-bs-toggle="tooltip"
+                                                    title="Remover cor">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-4">
+                                        <div class="text-muted">
+                                            <i class="fas fa-palette fa-2x mb-3"></i>
+                                            <p>Nenhuma cor encontrada.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modais -->
+
+<!-- Modal Adicionar Marca -->
+<div class="modal fade" id="modalAdicionarMarca" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-trademark me-2"></i>Nova Marca
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add_marca">
+                <input type="hidden" name="tab" value="marcas">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="{{ form_marca.nome.id_for_label }}" class="form-label">
+                            {{ form_marca.nome.label }} <span class="text-danger">*</span>
+                        </label>
+                        {{ form_marca.nome }}
+                        {% if form_marca.nome.help_text %}
+                        <div class="form-text">{{ form_marca.nome.help_text }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label for="{{ form_marca.pais_origem.id_for_label }}" class="form-label">
+                            {{ form_marca.pais_origem.label }}
+                        </label>
+                        {{ form_marca.pais_origem }}
+                        {% if form_marca.pais_origem.help_text %}
+                        <div class="form-text">{{ form_marca.pais_origem.help_text }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="form-check">
+                        {{ form_marca.ativo }}
+                        <label for="{{ form_marca.ativo.id_for_label }}" class="form-check-label">
+                            {{ form_marca.ativo.label }}
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>Cadastrar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Adicionar Modelo -->
+<div class="modal fade" id="modalAdicionarModelo" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-car me-2"></i>Novo Modelo
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add_modelo">
+                <input type="hidden" name="tab" value="modelos">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="{{ form_modelo.marca.id_for_label }}" class="form-label">
+                            {{ form_modelo.marca.label }} <span class="text-danger">*</span>
+                        </label>
+                        {{ form_modelo.marca }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="{{ form_modelo.nome.id_for_label }}" class="form-label">
+                            {{ form_modelo.nome.label }} <span class="text-danger">*</span>
+                        </label>
+                        {{ form_modelo.nome }}
+                        {% if form_modelo.nome.help_text %}
+                        <div class="form-text">{{ form_modelo.nome.help_text }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label for="{{ form_modelo.categoria.id_for_label }}" class="form-label">
+                            {{ form_modelo.categoria.label }} <span class="text-danger">*</span>
+                        </label>
+                        {{ form_modelo.categoria }}
+                        {% if form_modelo.categoria.help_text %}
+                        <div class="form-text">{{ form_modelo.categoria.help_text }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="form-check">
+                        {{ form_modelo.ativo }}
+                        <label for="{{ form_modelo.ativo.id_for_label }}" class="form-check-label">
+                            {{ form_modelo.ativo.label }}
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>Cadastrar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Adicionar Cor -->
+<div class="modal fade" id="modalAdicionarCor" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-palette me-2"></i>Nova Cor
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add_cor">
+                <input type="hidden" name="tab" value="cores">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="{{ form_cor.nome.id_for_label }}" class="form-label">
+                            {{ form_cor.nome.label }} <span class="text-danger">*</span>
+                        </label>
+                        {{ form_cor.nome }}
+                        {% if form_cor.nome.help_text %}
+                        <div class="form-text">{{ form_cor.nome.help_text }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label for="{{ form_cor.codigo_hex.id_for_label }}" class="form-label">
+                            {{ form_cor.codigo_hex.label }}
+                        </label>
+                        <div class="input-group">
+                            {{ form_cor.codigo_hex }}
+                            <span class="input-group-text" id="color-preview" style="width: 50px; background-color: #ffffff;"></span>
+                        </div>
+                        {% if form_cor.codigo_hex.help_text %}
+                        <div class="form-text">{{ form_cor.codigo_hex.help_text }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="form-check">
+                        {{ form_cor.ativo }}
+                        <label for="{{ form_cor.ativo.id_for_label }}" class="form-check-label">
+                            {{ form_cor.ativo.label }}
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>Cadastrar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Confirmação Remoção Marca -->
+<div class="modal fade" id="modalRemoverMarca" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Confirmar Remoção
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem certeza que deseja remover a marca <strong id="marcaNome"></strong>?</p>
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Esta ação não pode ser desfeita e todos os modelos desta marca também serão removidos.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Cancelar
+                </button>
+                <form id="formRemoverMarca" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-2"></i>Confirmar Remoção
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Confirmação Remoção Modelo -->
+<div class="modal fade" id="modalRemoverModelo" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Confirmar Remoção
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem certeza que deseja remover o modelo <strong id="modeloNome"></strong>?</p>
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Esta ação não pode ser desfeita.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Cancelar
+                </button>
+                <form id="formRemoverModelo" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-2"></i>Confirmar Remoção
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Confirmação Remoção Cor -->
+<div class="modal fade" id="modalRemoverCor" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Confirmar Remoção
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem certeza que deseja remover a cor <strong id="corNome"></strong>?</p>
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Esta ação não pode ser desfeita.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Cancelar
+                </button>
+                <form id="formRemoverCor" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-2"></i>Confirmar Remoção
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scriptJS %}
+<script>
+// Inicialização das abas
+document.addEventListener('DOMContentLoaded', function() {
+    // Ativar a aba correta baseada no parâmetro tab
+    const urlParams = new URLSearchParams(window.location.search);
+    const activeTab = urlParams.get('tab') || 'marcas';
+    
+    const tabButton = document.getElementById(activeTab + '-tab');
+    if (tabButton) {
+        const tab = new bootstrap.Tab(tabButton);
+        tab.show();
+    }
+    
+    // Atualizar URL quando trocar de aba
+    document.querySelectorAll('[data-bs-toggle="tab"]').forEach(function(tabEl) {
+        tabEl.addEventListener('shown.bs.tab', function(event) {
+            const tabId = event.target.getAttribute('data-bs-target').substring(1);
+            const url = new URL(window.location);
+            url.searchParams.set('tab', tabId);
+            window.history.replaceState({}, '', url);
+        });
+    });
+});
+
+// Preview da cor
+document.getElementById('{{ form_cor.codigo_hex.id_for_label }}').addEventListener('input', function() {
+    const colorValue = this.value;
+    const preview = document.getElementById('color-preview');
+    
+    if (/^#[0-9A-Fa-f]{6}$/.test(colorValue)) {
+        preview.style.backgroundColor = colorValue;
+    } else {
+        preview.style.backgroundColor = '#ffffff';
+    }
+});
+
+// Funções de confirmação de remoção
+function confirmarRemocao(nome, url) {
+    document.getElementById('marcaNome').textContent = nome;
+    document.getElementById('formRemoverMarca').action = url;
+    new bootstrap.Modal(document.getElementById('modalRemoverMarca')).show();
+}
+
+function confirmarRemocaoModelo(nome, url) {
+    document.getElementById('modeloNome').textContent = nome;
+    document.getElementById('formRemoverModelo').action = url;
+    new bootstrap.Modal(document.getElementById('modalRemoverModelo')).show();
+}
+
+function confirmarRemocaoCor(nome, url) {
+    document.getElementById('corNome').textContent = nome;
+    document.getElementById('formRemoverCor').action = url;
+    new bootstrap.Modal(document.getElementById('modalRemoverCor')).show();
+}
+
+// Tooltips
+var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl);
+});
+
+// Auto-hide alerts
+setTimeout(function() {
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(function(alert) {
+        const bsAlert = new bootstrap.Alert(alert);
+        bsAlert.close();
+    });
+}, 5000);
+</script>
+{% endblock %}

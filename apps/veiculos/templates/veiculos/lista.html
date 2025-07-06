@@ -1,0 +1,522 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Veículos{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Cabeçalho -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="text-primary mb-0">
+                <i class="fas fa-car me-2"></i>Veículos
+            </h2>
+            <p class="text-muted">Gerenciamento de veículos da concessionária</p>
+        </div>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalAdicionar">
+            <i class="fas fa-plus me-2"></i>Novo Veículo
+        </button>
+    </div>
+
+    <!-- Filtros e Busca -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form id="form-filtros" class="row g-3" action="{% url 'administracao:lista_veiculos' %}" method="GET">
+                <div class="col-md-3">
+                    <div class="input-group">
+                        <span class="input-group-text bg-primary text-white">
+                            <i class="fas fa-search"></i>
+                        </span>
+                        <input 
+                            type="text" 
+                            class="form-control" 
+                            name="search"
+                            placeholder="Pesquisar veículos..."
+                            value="{{ search_query }}"
+                        >
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <select name="marca" class="form-select">
+                        <option value="">Todas Marcas</option>
+                        {% for marca in marcas %}
+                        <option value="{{ marca.id }}" 
+                                {% if marca.id|stringformat:'s' == marca_selecionada %}selected{% endif %}>
+                            {{ marca.nome }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select name="modelo" class="form-select">
+                        <option value="">Todos Modelos</option>
+                        {% for modelo in modelos %}
+                        <option value="{{ modelo.id }}" 
+                                {% if modelo.id|stringformat:'s' == modelo_selecionado %}selected{% endif %}>
+                            {{ modelo.marca.nome }} {{ modelo.nome }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select name="condicao" class="form-select">
+                        <option value="">Todas Condições</option>
+                        {% for choice in condicao_choices %}
+                        <option value="{{ choice.0 }}" 
+                                {% if choice.0 == condicao_selecionada %}selected{% endif %}>
+                            {{ choice.1 }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select name="combustivel" class="form-select">
+                        <option value="">Todos Combustíveis</option>
+                        {% for choice in combustivel_choices %}
+                        <option value="{{ choice.0 }}" 
+                                {% if choice.0 == combustivel_selecionado %}selected{% endif %}>
+                            {{ choice.1 }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-1">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-filter"></i>
+                    </button>
+                </div>
+            </form>
+            
+            <!-- Segunda linha de filtros -->
+            <div class="row g-3 mt-2">
+                <div class="col-md-3">
+                    <select name="disponibilidade" class="form-select">
+                        {% for choice in disponibilidade_choices %}
+                        <option value="{{ choice.0 }}" 
+                                {% if choice.0 == disponibilidade_selecionada %}selected{% endif %}>
+                            {{ choice.1 }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-9">
+                    {% if search_query or marca_selecionada or modelo_selecionado or condicao_selecionada or combustivel_selecionado or disponibilidade_selecionada %}
+                    <a href="{% url 'administracao:lista_veiculos' %}" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-times me-1"></i>Limpar Filtros
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros Ativos -->
+    {% if search_query or marca_selecionada or modelo_selecionado or condicao_selecionada or combustivel_selecionado or disponibilidade_selecionada %}
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="d-flex align-items-center flex-wrap">
+                <span class="me-2 text-muted">Filtros ativos:</span>
+                
+                {% if search_query %}
+                <span class="badge bg-secondary me-2 mb-1">
+                    Busca: {{ search_query }}
+                </span>
+                {% endif %}
+                
+                {% if marca_selecionada %}
+                <span class="badge bg-secondary me-2 mb-1">
+                    Marca: 
+                    {% for marca in marcas %}
+                        {% if marca.id|stringformat:'s' == marca_selecionada %}
+                            {{ marca.nome }}
+                        {% endif %}
+                    {% endfor %}
+                </span>
+                {% endif %}
+                
+                {% if modelo_selecionado %}
+                <span class="badge bg-secondary me-2 mb-1">
+                    Modelo: 
+                    {% for modelo in modelos %}
+                        {% if modelo.id|stringformat:'s' == modelo_selecionado %}
+                            {{ modelo.nome }}
+                        {% endif %}
+                    {% endfor %}
+                </span>
+                {% endif %}
+                
+                {% if condicao_selecionada %}
+                <span class="badge bg-secondary me-2 mb-1">
+                    Condição: 
+                    {% for choice in condicao_choices %}
+                        {% if choice.0 == condicao_selecionada %}
+                            {{ choice.1 }}
+                        {% endif %}
+                    {% endfor %}
+                </span>
+                {% endif %}
+                
+                {% if combustivel_selecionado %}
+                <span class="badge bg-secondary me-2 mb-1">
+                    Combustível: 
+                    {% for choice in combustivel_choices %}
+                        {% if choice.0 == combustivel_selecionado %}
+                            {{ choice.1 }}
+                        {% endif %}
+                    {% endfor %}
+                </span>
+                {% endif %}
+                
+                {% if disponibilidade_selecionada %}
+                <span class="badge bg-secondary me-2 mb-1">
+                    Disponibilidade: 
+                    {% for choice in disponibilidade_choices %}
+                        {% if choice.0 == disponibilidade_selecionada %}
+                            {{ choice.1 }}
+                        {% endif %}
+                    {% endfor %}
+                </span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Lista de Veículos -->
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr class="bg-dark text-white">
+                            <th colspan="8" class="ps-3">
+                                Veículos
+                                <a href="" class="float-end text-primary me-3" data-bs-toggle="tooltip" data-bs-placement="top" title="Imprimir Lista de Veículos">
+                                    <i class="fas fa-print"></i>
+                                </a>
+                            </th>
+                        </tr>
+                        <tr class="bg-primary text-white">
+                            <th scope="col" class="ps-3">Veículo</th>
+                            <th scope="col">Ano</th>
+                            <th scope="col">Condição</th>
+                            <th scope="col">Combustível</th>
+                            <th scope="col">Preço Venda</th>
+                            <th scope="col">Preço Aluguel</th>
+                            <th scope="col">Disponibilidade</th>
+                            <th scope="col" class="text-end pe-3">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for carro in carros %}
+                        <tr>
+                            <td class="ps-3">
+                                <div class="d-flex align-items-center">
+                                    {% if carro.fotos.exists %}
+                                        <img src="{{ carro.fotos.first.foto.url }}" 
+                                             alt="{{ carro.nome_completo }}"
+                                             class="rounded me-2"
+                                             style="width: 50px; height: 40px; object-fit: cover;">
+                                    {% else %}
+                                        <div class="bg-primary text-white rounded me-2 d-flex align-items-center justify-content-center" style="width: 50px; height: 40px">
+                                            <i class="fas fa-car"></i>
+                                        </div>
+                                    {% endif %}
+                                    <div>
+                                        <div class="fw-bold">{{ carro.modelo.marca.nome }} {{ carro.modelo.nome }}</div>
+                                        <small class="text-muted">{{ carro.cor.nome }} - {{ carro.quilometragem|floatformat:0 }} km</small>
+                                        {% if carro.matricula %}
+                                        <small class="text-muted d-block">{{ carro.matricula }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div>{{ carro.ano_fabricacao }}/{{ carro.ano_modelo }}</div>
+                                <small class="text-muted">Fab/Mod</small>
+                            </td>
+                            <td>
+                                <span class="badge {% if carro.condicao == 'novo' %}bg-primary{% else %}bg-warning text-dark{% endif %}">
+                                    {{ carro.get_condicao_display }}
+                                </span>
+                            </td>
+                            <td>{{ carro.get_combustivel_display }}</td>
+                            <td>
+                                {% if carro.preco_venda %}
+                                    <strong>Kz {{ carro.preco_venda|floatformat:2 }}</strong>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if carro.preco_aluguel_diario %}
+                                    <strong>Kz {{ carro.preco_aluguel_diario|floatformat:2 }}/dia</strong>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="d-flex flex-column">
+                                    {% if carro.disponivel_venda %}
+                                    <span class="badge bg-primary mb-1" style="font-size: 0.7em;">Venda</span>
+                                    {% endif %}
+                                    {% if carro.disponivel_aluguel %}
+                                    <span class="badge bg-info" style="font-size: 0.7em;">Aluguel</span>
+                                    {% endif %}
+                                    {% if not carro.disponivel_venda and not carro.disponivel_aluguel %}
+                                    <span class="badge bg-secondary" style="font-size: 0.7em;">Indisponível</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td class="text-end pe-3">
+                                <div class="btn-group">
+                                    <a href="{% url 'administracao:detalhes_veiculo' pk=carro.pk %}" 
+                                       class="btn btn-sm btn-outline-primary"
+                                       data-bs-toggle="tooltip"
+                                       data-bs-placement="top"
+                                       title="Ver detalhes do veículo">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{% comment %}{% url 'veiculos:editar' pk=carro.pk %}{% endcomment %}" 
+                                       class="btn btn-sm btn-outline-primary"
+                                       data-bs-toggle="tooltip"
+                                       data-bs-placement="top"
+                                       title="Editar veículo">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-danger"
+                                            onclick="confirmarRemocao('{{ carro.nome_completo }}', '{% url 'administracao:remover_veiculo' carro.pk %}')"
+                                            data-bs-toggle="tooltip"
+                                            data-bs-placement="top"
+                                            title="Remover veículo">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center py-5">
+                                <div class="text-muted">
+                                    <i class="fas fa-car fa-3x mb-3"></i>
+                                    <h5>
+                                        {% if search_query %}
+                                            Nenhum veículo encontrado para "{{ search_query }}"
+                                        {% else %}
+                                            Nenhum veículo cadastrado
+                                        {% endif %}
+                                    </h5>
+                                    <p class="mb-3">
+                                        {% if search_query %}
+                                            Tente ajustar os filtros ou fazer uma nova pesquisa.
+                                        {% else %}
+                                            Comece adicionando o primeiro veículo à sua concessionária.
+                                        {% endif %}
+                                    </p>
+                                    {% if search_query %}
+                                    <a href="{% url 'administracao:lista_veiculos' %}" class="btn btn-outline-secondary">
+                                        <i class="fas fa-times me-1"></i>Limpar pesquisa
+                                    </a>
+                                    {% else %}
+                                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalAdicionar">
+                                        <i class="fas fa-plus me-2"></i>Adicionar Primeiro Veículo
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Paginação -->
+    {% if is_paginated %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link text-primary" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.marca %}&marca={{ request.GET.marca }}{% endif %}{% if request.GET.modelo %}&modelo={{ request.GET.modelo }}{% endif %}{% if request.GET.condicao %}&condicao={{ request.GET.condicao }}{% endif %}{% if request.GET.combustivel %}&combustivel={{ request.GET.combustivel }}{% endif %}{% if request.GET.disponibilidade %}&disponibilidade={{ request.GET.disponibilidade }}{% endif %}">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+            </li>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+            <li class="page-item active">
+                <span class="page-link bg-primary border-primary">{{ num }}</span>
+            </li>
+            {% else %}
+            <li class="page-item">
+                <a class="page-link text-primary" href="?page={{ num }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.marca %}&marca={{ request.GET.marca }}{% endif %}{% if request.GET.modelo %}&modelo={{ request.GET.modelo }}{% endif %}{% if request.GET.condicao %}&condicao={{ request.GET.condicao }}{% endif %}{% if request.GET.combustivel %}&combustivel={{ request.GET.combustivel }}{% endif %}{% if request.GET.disponibilidade %}&disponibilidade={{ request.GET.disponibilidade }}{% endif %}">{{ num }}</a>
+            </li>
+            {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link text-primary" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.marca %}&marca={{ request.GET.marca }}{% endif %}{% if request.GET.modelo %}&modelo={{ request.GET.modelo }}{% endif %}{% if request.GET.condicao %}&condicao={{ request.GET.condicao }}{% endif %}{% if request.GET.combustivel %}&combustivel={{ request.GET.combustivel }}{% endif %}{% if request.GET.disponibilidade %}&disponibilidade={{ request.GET.disponibilidade }}{% endif %}">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+    <!-- Estatísticas do Rodapé -->
+    <div class="row mt-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h4>{{ carros|length }}</h4>
+                    <small>Veículos Listados</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <h4>{{ carros|length }}</h4>
+                    <small>Total na Página</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body text-center">
+                    <h4>-</h4>
+                    <small>Disponível Venda</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h4>-</h4>
+                    <small>Disponível Aluguel</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Adicionar Carro -->
+{% include 'veiculos/adicionarModal.html' %}
+
+<!-- Modal Remover Carro -->
+<div class="modal fade" id="modalRemover" tabindex="-1" aria-labelledby="modalRemoverLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="modalRemoverLabel">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Confirmar Remoção
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem certeza que deseja remover o veículo <strong id="carroNome"></strong>?</p>
+                <p class="text-muted small">Esta ação não pode ser desfeita.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form id="formRemover" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-2"></i>Remover
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scriptJS %}
+<script>
+    
+// Inicializar tooltips
+var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl)
+});
+
+// Função para confirmar remoção do veículo
+function confirmarRemocao(nome, url) {
+    // Atualiza o nome do veículo no modal
+    document.getElementById('carroNome').textContent = nome;
+    
+    // Atualiza o action do formulário com a URL correta
+    document.getElementById('formRemover').action = url;
+    
+    // Abre o modal
+    new bootstrap.Modal(document.getElementById('modalRemover')).show();
+}
+
+
+// Sincronizar filtros de marca e modelo
+document.querySelector('select[name="marca"]').addEventListener('change', function() {
+    const marcaId = this.value;
+    const modeloSelect = document.querySelector('select[name="modelo"]');
+    
+    // Filtrar modelos baseado na marca selecionada
+    Array.from(modeloSelect.options).forEach(option => {
+        if (option.value === '') {
+            option.style.display = 'block';
+            return;
+        }
+        
+        const optionText = option.textContent;
+        const marcaSelecionada = this.options[this.selectedIndex].textContent;
+        
+        if (!marcaId || optionText.includes(marcaSelecionada)) {
+            option.style.display = 'block';
+        } else {
+            option.style.display = 'none';
+        }
+    });
+    
+    // Reset modelo selection if marca changed
+    if (marcaId) {
+        modeloSelect.selectedIndex = 0;
+    }
+});
+
+// Auto-submit do formulário quando filtros são alterados
+document.querySelectorAll('#form-filtros select[name="marca"], #form-filtros select[name="modelo"], #form-filtros select[name="condicao"], #form-filtros select[name="combustivel"], #form-filtros select[name="disponibilidade"]').forEach(select => {
+    select.addEventListener('change', function() {
+        clearTimeout(this.submitTimeout);
+        this.submitTimeout = setTimeout(() => {
+            this.closest('form').submit();
+        }, 300);
+    });
+});
+
+// Limpeza automática de filtros quando busca é realizada
+document.querySelector('input[name="search"]').addEventListener('input', function() {
+    if (this.value.length > 2) {
+        // Auto-busca após 3 caracteres com debounce
+        clearTimeout(this.searchTimeout);
+        this.searchTimeout = setTimeout(() => {
+            this.closest('form').submit();
+        }, 500);
+    }
+});
+
+// Destaque de linhas na tabela
+document.querySelectorAll('tbody tr').forEach(row => {
+    row.addEventListener('mouseenter', function() {
+        this.style.backgroundColor = '#f8f9fa';
+    });
+    
+    row.addEventListener('mouseleave', function() {
+        this.style.backgroundColor = '';
+    });
+});
+</script>
+{% endblock %}

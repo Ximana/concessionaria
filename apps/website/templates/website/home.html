@@ -1,0 +1,304 @@
+{% extends 'website/base.html' %}
+{% load static %}
+
+{% block title %}AutoPrime - Sua Concessionária de Confiança{% endblock %}
+
+{% block arquivos_css %}
+<style>
+.banner {
+  background: linear-gradient(135deg,rgb(38, 48, 91) 0%,rgb(80, 51, 110) 100%);
+  color: white;
+  padding: 150px 0;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.banner::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" fill="white" opacity="0.1"><polygon points="0,100 1000,0 1000,100"/></svg>');
+  background-size: cover;
+}
+
+.banner .container {
+  position: relative;
+  z-index: 2;
+}
+
+.estatisticas {
+  background: #f8f9fa;
+  padding: 60px 0;
+}
+
+.stat-card {
+  text-align: center;
+  padding: 30px 20px;
+  border-radius: 10px;
+  background: white;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+  transition: transform 0.3s ease;
+  height: 100%;
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+}
+
+.stat-card .icon {
+  font-size: 3rem;
+  margin-bottom: 15px;
+  color: #667eea;
+}
+
+.stat-card .number {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.stat-card .label {
+  color: #666;
+  font-size: 1.1rem;
+}
+
+.cartao-carro {
+  transition: transform 0.2s, box-shadow 0.2s;
+  border: none;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  height: 100%;
+}
+
+.cartao-carro:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.card-img-top {
+  transition: transform 0.3s ease;
+  height: 200px;
+  object-fit: cover;
+}
+
+.cartao-carro:hover .card-img-top {
+  transform: scale(1.05);
+}
+
+.marca-logo {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8f9fa;
+  border: 2px solid #e9ecef;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  color: #495057;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.marca-logo:hover {
+  background: #667eea;
+  color: white;
+  border-color: #667eea;
+  transform: scale(1.1);
+}
+
+.cta-section {
+  background: linear-gradient(135deg,rgb(38, 48, 91) 0%,rgb(80, 51, 110) 100%);
+  color: white;
+  padding: 80px 0;
+  text-align: center;
+}
+
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Banner Principal -->
+<header class="banner">
+  <div class="container">
+    <h1>Bem-vindo à AutoPrime</h1>
+    <p>Encontre o carro dos seus sonhos com a melhor qualidade e preço de Angola</p>
+    <div class="d-flex justify-content-center gap-3 flex-wrap">
+      <a href="{% url 'website:loja' %}" class="btn btn-light btn-sm ">
+        <i class="fas fa-car me-2"></i>Ver Estoque
+      </a>
+      <a href="{% url 'website:loja' %}?condicao=novo" class="btn btn-outline-light btn-sm px-4">
+        <i class="fas fa-star me-2"></i>Carros Novos
+      </a>
+    </div>
+  </div>
+</header>
+
+<!-- Estatísticas -->
+<section class="estatisticas">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-lg-3 col-md-6">
+        <div class="stat-card">
+          <div class="icon">
+            <i class="fas fa-car"></i>
+          </div>
+          <div class="number">{{ total_carros }}</div>
+          <div class="label">Carros Disponíveis</div>
+        </div>
+      </div>
+      <div class="col-lg-3 col-md-6">
+        <div class="stat-card">
+          <div class="icon">
+            <i class="fas fa-award"></i>
+          </div>
+          <div class="number">{{ total_marcas }}</div>
+          <div class="label">Marcas Disponíveis</div>
+        </div>
+      </div>
+      <div class="col-lg-3 col-md-6">
+        <div class="stat-card">
+          <div class="icon">
+            <i class="fas fa-gem"></i>
+          </div>
+          <div class="number">{{ carros_novos }}</div>
+          <div class="label">Carros Novos</div>
+        </div>
+      </div>
+      <div class="col-lg-3 col-md-6">
+        <div class="stat-card">
+          <div class="icon">
+            <i class="fas fa-road"></i>
+          </div>
+          <div class="number">{{ carros_usados }}</div>
+          <div class="label">Carros Usados</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Destaques da Semana -->
+<main class="container my-5">
+  <div class="text-center mb-5">
+    <h2 class="h1 fw-bold">Destaques da Semana</h2>
+    <p class="lead text-muted">Confira os veículos que acabaram de chegar ao nosso estoque</p>
+  </div>
+
+  {% if carros_destaque %}
+    <div class="row g-4">
+      {% for carro in carros_destaque %}
+        <div class="col-lg-4 col-md-6">
+          <div class="card cartao-carro">
+            {% with foto_principal=carro.fotos.all|first %}
+              {% if foto_principal %}
+                <img src="{{ foto_principal.foto.url }}" class="card-img-top" 
+                     alt="{{ carro.nome_completo }}">
+              {% else %}
+                <img src="https://via.placeholder.com/400x200?text=Sem+Foto" 
+                     class="card-img-top" alt="{{ carro.nome_completo }}">
+              {% endif %}
+            {% endwith %}
+
+            <div class="card-body d-flex flex-column">
+              <h5 class="card-title">{{ carro.nome_completo }}</h5>
+              
+              <div class="mb-2">
+                <small class="text-muted">
+                  <i class="fas fa-calendar me-1"></i>{{ carro.ano_modelo }} •
+                  <i class="fas fa-road me-1"></i>{{ carro.quilometragem|floatformat:0 }} km •
+                  <i class="fas fa-gas-pump me-1"></i>{{ carro.get_combustivel_display }}
+                </small>
+              </div>
+
+              <div class="mb-3">
+                <span class="badge bg-{{ carro.condicao|yesno:'success,primary' }} me-1">
+                  {{ carro.get_condicao_display }}
+                </span>
+                <span class="badge bg-info">{{ carro.cor.nome }}</span>
+              </div>
+
+              {% if carro.preco_venda %}
+                <div class="mb-3">
+                  <h4 class="text-primary mb-0">
+                    {{ carro.preco_venda|floatformat:0 }} Kz
+                  </h4>
+                </div>
+              {% endif %}
+
+              <div class="mt-auto">
+                <div class="d-grid">
+                  <a href="{% url 'website:carro_detailhe' carro.pk %}" class="btn btn-primary">
+                    <i class="fas fa-eye me-2"></i>Ver Detalhes
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    <div class="text-center mt-5">
+      <a href="{% url 'website:loja' %}" class="btn btn-outline-primary btn-sm">
+        <i class="fas fa-th-large me-2"></i>Ver Todos os Carros
+      </a>
+    </div>
+  {% else %}
+    <div class="text-center py-5">
+      <div class="mb-4">
+        <i class="fas fa-car fa-3x text-muted"></i>
+      </div>
+      <h4>Estoque em Atualização</h4>
+      <p class="text-muted">Em breve teremos novos veículos disponíveis!</p>
+    </div>
+  {% endif %}
+</main>
+
+<!-- Marcas Populares -->
+{% if marcas_populares %}
+<section class="bg-light py-5">
+  <div class="container">
+    <div class="text-center mb-5">
+      <h2 class="h2 fw-bold">Marcas Disponíveis</h2>
+      <p class="lead text-muted">Trabalhamos com as melhores marcas do mercado</p>
+    </div>
+
+    <div class="row g-4 justify-content-center">
+      {% for marca in marcas_populares %}
+        <div class="col-lg-2 col-md-3 col-4 text-center">
+          <a href="{% url 'website:loja' %}?marca={{ marca.id }}" class="marca-logo mx-auto">
+            {{ marca.nome|slice:":3"|upper }}
+          </a>
+          <div class="mt-2">
+            <h6 class="mb-0">{{ marca.nome }}</h6>
+            <small class="text-muted">{{ marca.total_carros }} carro{{ marca.total_carros|pluralize }}</small>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- Call to Action -->
+<section class="cta-section">
+  <div class="container">
+    <h2>Pronto para encontrar seu próximo carro?</h2>
+    <p>Explore nosso estoque completo ou entre em contato conosco</p>
+    <div class="d-flex justify-content-center gap-3 flex-wrap">
+      <a href="{% url 'website:loja' %}" class="btn btn-light btn-sm px-4">
+        <i class="fas fa-search me-2"></i>Explorar Estoque
+      </a>
+      <a href="#" class="btn btn-outline-light btn-sm px-4">
+        <i class="fas fa-phone me-2"></i>Falar Conosco
+      </a>
+    </div>
+  </div>
+</section>
+{% endblock %}

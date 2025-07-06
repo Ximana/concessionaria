@@ -1,0 +1,14 @@
+Django==5.1.5
+
+# Gunicorn para deploy em produção (Render)
+gunicorn==22.0.0
+
+# WhiteNoise para servir arquivos estáticos
+whitenoise==6.6.0
+
+# Forms e UI
+django-crispy-forms==2.3
+crispy-bootstrap5==2024.10
+
+# HTTP requests (caso uses APIs externas)
+requests==2.32.3

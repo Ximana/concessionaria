@@ -1,0 +1,402 @@
+<!-- administracao/carros/adicionarModal.html -->
+<div
+  class="modal fade"
+  id="modalAdicionar"
+  tabindex="-1"
+  aria-labelledby="modalAdicionarLabel"
+  aria-hidden="true"
+  data-bs-backdrop="static"
+>
+  <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalAdicionarLabel">
+          <i class="fas fa-car me-2"></i>Adicionar Novo Carro
+        </h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <form class="row" method="POST" enctype="multipart/form-data">
+          {% csrf_token %}
+          
+          <!-- Coluna 1: Informações Básicas -->
+          <div class="col-md-6">
+            <h6 class="text-primary mb-3">
+              <i class="fas fa-info-circle me-2"></i>Informações Básicas
+            </h6>
+            
+            <div class="form-group mb-3">
+              <label for="modelo">Modelo</label>
+              <select 
+                class="form-select {% if form.modelo.errors %}is-invalid{% endif %}" 
+                id="modelo" 
+                name="modelo"
+                required
+              >
+                <option value="">Selecione um modelo...</option>
+                {% for modelo in form.fields.modelo.queryset %}
+                  <option value="{{ modelo.id }}" {% if form.modelo.value == modelo.id %}selected{% endif %}>
+                    {{ modelo.marca.nome }} {{ modelo.nome }}
+                  </option>
+                {% endfor %}
+              </select>
+              {% if form.modelo.errors %}
+                <div class="invalid-feedback">{{ form.modelo.errors|first }}</div>
+              {% endif %}
+            </div>
+
+            <div class="form-group mb-3">
+              <label for="cor">Cor</label>
+              <select 
+                class="form-select {% if form.cor.errors %}is-invalid{% endif %}" 
+                id="cor" 
+                name="cor"
+                required
+              >
+                <option value="">Selecione uma cor...</option>
+                {% for cor in form.fields.cor.queryset %}
+                  <option value="{{ cor.id }}" {% if form.cor.value == cor.id %}selected{% endif %}>
+                    {{ cor.nome }}
+                  </option>
+                {% endfor %}
+              </select>
+              {% if form.cor.errors %}
+                <div class="invalid-feedback">{{ form.cor.errors|first }}</div>
+              {% endif %}
+            </div>
+
+            <div class="row">
+              <div class="col-6 form-group mb-3">
+                <label for="ano_fabricacao">Ano de Fabricação</label>
+                <input
+                  type="number"
+                  class="form-control {% if form.ano_fabricacao.errors %}is-invalid{% endif %}"
+                  id="ano_fabricacao"
+                  name="ano_fabricacao"
+                  value="{{ form.ano_fabricacao.value|default:'' }}"
+                  min="1900"
+                  max="2026"
+                  required
+                />
+                {% if form.ano_fabricacao.errors %}
+                  <div class="invalid-feedback">{{ form.ano_fabricacao.errors|first }}</div>
+                {% endif %}
+              </div>
+
+              <div class="col-6 form-group mb-3">
+                <label for="ano_modelo">Ano do Modelo</label>
+                <input
+                  type="number"
+                  class="form-control {% if form.ano_modelo.errors %}is-invalid{% endif %}"
+                  id="ano_modelo"
+                  name="ano_modelo"
+                  value="{{ form.ano_modelo.value|default:'' }}"
+                  min="1900"
+                  max="2027"
+                  required
+                />
+                {% if form.ano_modelo.errors %}
+                  <div class="invalid-feedback">{{ form.ano_modelo.errors|first }}</div>
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="form-group mb-3">
+              <label for="condicao">Condição</label>
+              <select 
+                class="form-select {% if form.condicao.errors %}is-invalid{% endif %}" 
+                id="condicao" 
+                name="condicao"
+                required
+              >
+                <option value="">Selecione a condição...</option>
+                {% for choice in form.condicao.field.choices %}
+                  <option value="{{ choice.0 }}" {% if form.condicao.value == choice.0 %}selected{% endif %}>
+                    {{ choice.1 }}
+                  </option>
+                {% endfor %}
+              </select>
+              {% if form.condicao.errors %}
+                <div class="invalid-feedback">{{ form.condicao.errors|first }}</div>
+              {% endif %}
+            </div>
+
+            <div class="row">
+              <div class="col-6 form-group mb-3">
+                <label for="preco_venda">Preço de Venda (Kz)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  class="form-control {% if form.preco_venda.errors %}is-invalid{% endif %}"
+                  id="preco_venda"
+                  name="preco_venda"
+                  value="{{ form.preco_venda.value|default:'' }}"
+                  placeholder="0.00"
+                />
+                {% if form.preco_venda.errors %}
+                  <div class="invalid-feedback">{{ form.preco_venda.errors|first }}</div>
+                {% endif %}
+              </div>
+
+              <div class="col-6 form-group mb-3">
+                <label for="preco_aluguel_diario">Preço Aluguel/Dia (Kz)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  class="form-control {% if form.preco_aluguel_diario.errors %}is-invalid{% endif %}"
+                  id="preco_aluguel_diario"
+                  name="preco_aluguel_diario"
+                  value="{{ form.preco_aluguel_diario.value|default:'' }}"
+                  placeholder="0.00"
+                />
+                {% if form.preco_aluguel_diario.errors %}
+                  <div class="invalid-feedback">{{ form.preco_aluguel_diario.errors|first }}</div>
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="form-group mb-3">
+              <label for="quilometragem">Quilometragem</label>
+              <input
+                type="number"
+                class="form-control {% if form.quilometragem.errors %}is-invalid{% endif %}"
+                id="quilometragem"
+                name="quilometragem"
+                value="{{ form.quilometragem.value|default:'0' }}"
+                min="0"
+              />
+              {% if form.quilometragem.errors %}
+                <div class="invalid-feedback">{{ form.quilometragem.errors|first }}</div>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- Coluna 2: Especificações Técnicas -->
+          <div class="col-md-6">
+            <h6 class="text-primary mb-3">
+              <i class="fas fa-cogs me-2"></i>Especificações Técnicas
+            </h6>
+            
+            <div class="form-group mb-3">
+              <label for="combustivel">Combustível</label>
+              <select 
+                class="form-select {% if form.combustivel.errors %}is-invalid{% endif %}" 
+                id="combustivel" 
+                name="combustivel"
+                required
+              >
+                <option value="">Selecione o combustível...</option>
+                {% for choice in form.combustivel.field.choices %}
+                  <option value="{{ choice.0 }}" {% if form.combustivel.value == choice.0 %}selected{% endif %}>
+                    {{ choice.1 }}
+                  </option>
+                {% endfor %}
+              </select>
+              {% if form.combustivel.errors %}
+                <div class="invalid-feedback">{{ form.combustivel.errors|first }}</div>
+              {% endif %}
+            </div>
+
+            <div class="form-group mb-3">
+              <label for="transmissao">Transmissão</label>
+              <select 
+                class="form-select {% if form.transmissao.errors %}is-invalid{% endif %}" 
+                id="transmissao" 
+                name="transmissao"
+                required
+              >
+                <option value="">Selecione a transmissão...</option>
+                {% for choice in form.transmissao.field.choices %}
+                  <option value="{{ choice.0 }}" {% if form.transmissao.value == choice.0 %}selected{% endif %}>
+                    {{ choice.1 }}
+                  </option>
+                {% endfor %}
+              </select>
+              {% if form.transmissao.errors %}
+                <div class="invalid-feedback">{{ form.transmissao.errors|first }}</div>
+              {% endif %}
+            </div>
+
+            <div class="row">
+              <div class="col-6 form-group mb-3">
+                <label for="motor">Motor</label>
+                <input
+                  type="text"
+                  class="form-control {% if form.motor.errors %}is-invalid{% endif %}"
+                  id="motor"
+                  name="motor"
+                  value="{{ form.motor.value|default:'' }}"
+                  placeholder="Ex: 1.0, 1.6, 2.0"
+                />
+                {% if form.motor.errors %}
+                  <div class="invalid-feedback">{{ form.motor.errors|first }}</div>
+                {% endif %}
+              </div>
+
+              <div class="col-6 form-group mb-3">
+                <label for="numero_portas">Número de Portas</label>
+                <input
+                  type="number"
+                  class="form-control {% if form.numero_portas.errors %}is-invalid{% endif %}"
+                  id="numero_portas"
+                  name="numero_portas"
+                  value="{{ form.numero_portas.value|default:'' }}"
+                  min="2"
+                  max="5"
+                />
+                {% if form.numero_portas.errors %}
+                  <div class="invalid-feedback">{{ form.numero_portas.errors|first }}</div>
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="form-group mb-3">
+              <label for="chassi">Chassi</label>
+              <input
+                type="text"
+                class="form-control {% if form.chassi.errors %}is-invalid{% endif %}"
+                id="chassi"
+                name="chassi"
+                value="{{ form.chassi.value|default:'' }}"
+                placeholder="17 dígitos do chassi"
+                maxlength="17"
+              />
+              {% if form.chassi.errors %}
+                <div class="invalid-feedback">{{ form.chassi.errors|first }}</div>
+              {% endif %}
+            </div>
+
+            <div class="row">
+              <div class="col-6 form-group mb-3">
+                <label for="matricula">Matrícula</label>
+                <input
+                  type="text"
+                  class="form-control {% if form.matricula.errors %}is-invalid{% endif %}"
+                  id="matricula"
+                  name="matricula"
+                  value="{{ form.matricula.value|default:'' }}"
+                  placeholder="Ex: LD-12-34-AB"
+                />
+                {% if form.matricula.errors %}
+                  <div class="invalid-feedback">{{ form.matricula.errors|first }}</div>
+                {% endif %}
+              </div>
+
+              <div class="col-6 form-group mb-3">
+                <label for="documento_unico">Documento Único</label>
+                <input
+                  type="text"
+                  class="form-control {% if form.documento_unico.errors %}is-invalid{% endif %}"
+                  id="documento_unico"
+                  name="documento_unico"
+                  value="{{ form.documento_unico.value|default:'' }}"
+                />
+                {% if form.documento_unico.errors %}
+                  <div class="invalid-feedback">{{ form.documento_unico.errors|first }}</div>
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="form-group mb-3">
+              <label for="primeira_foto">Primeira Foto do Carro</label>            
+              <input             
+                type="file"             
+                class="form-control"             
+                id="primeira_foto"             
+                name="primeira_foto" 
+                accept="image/*"           
+              >            
+            </div>
+
+            <div class="row">
+              <div class="col-6 form-group mb-3">
+                <div class="form-check">
+                  <input 
+                    type="checkbox" 
+                    class="form-check-input {% if form.disponivel_venda.errors %}is-invalid{% endif %}"
+                    id="disponivel_venda" 
+                    name="disponivel_venda"
+                    {% if form.disponivel_venda.value is not False %}checked{% endif %}
+                  >
+                  <label class="form-check-label" for="disponivel_venda">Disponível para Venda</label>
+                  {% if form.disponivel_venda.errors %}
+                    <div class="invalid-feedback">{{ form.disponivel_venda.errors|first }}</div>
+                  {% endif %}
+                </div>
+              </div>
+
+              <div class="col-6 form-group mb-3">
+                <div class="form-check">
+                  <input 
+                    type="checkbox" 
+                    class="form-check-input {% if form.disponivel_aluguel.errors %}is-invalid{% endif %}"
+                    id="disponivel_aluguel" 
+                    name="disponivel_aluguel"
+                    {% if form.disponivel_aluguel.value is not False %}checked{% endif %}
+                  >
+                  <label class="form-check-label" for="disponivel_aluguel">Disponível para Aluguel</label>
+                  {% if form.disponivel_aluguel.errors %}
+                    <div class="invalid-feedback">{{ form.disponivel_aluguel.errors|first }}</div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Coluna completa: Descrições -->
+          <div class="col-12">
+            <h6 class="text-primary mb-3 mt-3">
+              <i class="fas fa-file-alt me-2"></i>Descrições
+            </h6>
+            
+            <div class="form-group mb-3">
+              <label for="descricao">Descrição</label>
+              <textarea
+                class="form-control {% if form.descricao.errors %}is-invalid{% endif %}"
+                id="descricao"
+                name="descricao"
+                rows="3"
+                placeholder="Descrição detalhada do veículo..."
+              >{{ form.descricao.value|default:'' }}</textarea>
+              {% if form.descricao.errors %}
+                <div class="invalid-feedback">{{ form.descricao.errors|first }}</div>
+              {% endif %}
+            </div>
+
+            <div class="form-group mb-3">
+              <label for="observacoes">Observações Internas</label>
+              <textarea
+                class="form-control {% if form.observacoes.errors %}is-invalid{% endif %}"
+                id="observacoes"
+                name="observacoes"
+                rows="2"
+                placeholder="Observações para uso interno..."
+              >{{ form.observacoes.value|default:'' }}</textarea>
+              {% if form.observacoes.errors %}
+                <div class="invalid-feedback">{{ form.observacoes.errors|first }}</div>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="modal-footer mt-3">
+            <button
+              type="button"
+              class="btn btn-secondary btn-sm"
+              data-bs-dismiss="modal"
+            >
+              Fechar
+            </button>
+            <button type="submit" class="btn btn-primary btn-sm">
+              <i class="fas fa-save me-2"></i>Adicionar Carro
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

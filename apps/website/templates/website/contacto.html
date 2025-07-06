@@ -1,0 +1,48 @@
+{% extends 'website/base.html' %}
+{% load static %}
+
+{% block title %}Auto Primw{% endblock %}
+
+{% block content %}
+ <!-- Conteúdo principal -->
+  <main class="container contato-section">
+    <div class="row">
+      <div class="col-md-6 mb-4">
+        <h2>Fale Conosco</h2>
+        <p>Utilize o formulário para entrar em contato com nossa equipe. Responderemos o mais breve possível.</p>
+
+        <form>
+          <div class="mb-3">
+            <label for="nome" class="form-label">Nome</label>
+            <input type="text" class="form-control" id="nome" placeholder="Seu nome completo">
+          </div>
+          <div class="mb-3">
+            <label for="email" class="form-label">Email</label>
+            <input type="email" class="form-control" id="email" placeholder="seuemail@email.com">
+          </div>
+          <div class="mb-3">
+            <label for="mensagem" class="form-label">Mensagem</label>
+            <textarea class="form-control" id="mensagem" rows="4" placeholder="Digite sua mensagem aqui..."></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">Enviar Mensagem</button>
+        </form>
+      </div>
+
+      <div class="col-md-6">
+        <h4>Informações de Contato</h4>
+        <p><i class="fa fa-map-marker-alt"></i> Av. Principal, 1234 - Centro, Luanda</p>
+        <p><i class="fa fa-phone"></i> +244 999 123 456</p>
+        <p><i class="fa fa-envelope"></i> contato@autobid.com</p>
+
+        <h5 class="mt-4">Horário de Funcionamento</h5>
+        <ul class="list-unstyled">
+          <li>Seg a Sex: 08h00 - 18h00</li>
+          <li>Sábado: 08h00 - 13h00</li>
+          <li>Domingo: Fechado</li>
+        </ul>
+      </div>
+    </div>
+  </main>
+
+ 
+{% endblock %}

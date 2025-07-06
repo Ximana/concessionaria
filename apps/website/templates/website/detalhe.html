@@ -1,0 +1,491 @@
+{% extends 'website/base.html' %}
+{% load static %}
+
+{% block title %}Detalhesdo Carro{% endblock %}
+{% block arquivos_css %}
+<style>
+.miniatura-foto {
+  transition: all 0.3s ease;
+  opacity: 0.7;
+}
+
+.miniatura-foto:hover,
+.miniatura-foto.active {
+  opacity: 1;
+  transform: scale(1.05);
+  border-color: #007bff !important;
+}
+
+.x-small {
+  font-size: 0.75rem;
+}
+
+.card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+</style>
+{% endblock %}
+
+
+{% block content %}
+<main class="container my-4">
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        <i class="fas fa-info-circle me-2"></i>
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <!-- Breadcrumb -->
+  <nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'website:home' %}">Início</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'website:loja' %}">Loja</a></li>
+      <li class="breadcrumb-item active">{{ carro.nome_completo }}</li>
+    </ol>
+  </nav>
+
+  <div class="row">
+    <!-- Galeria de Fotos -->
+    <div class="col-lg-8">
+      <div class="card mb-4">
+        <div class="card-body p-0">
+          {% if fotos %}
+            <!-- Foto Principal -->
+            <div id="carouselFotos" class="carousel slide" data-bs-ride="false">
+              <div class="carousel-inner">
+                {% for foto in fotos %}
+                  <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                    <img src="{{ foto.foto.url }}" class="d-block w-100" 
+                         alt="{{ foto.descricao|default:carro.nome_completo }}"
+                         style="height: 400px; object-fit: cover;">
+                    {% if foto.descricao %}
+                      <div class="carousel-caption d-none d-md-block">
+                        <p class="mb-0 bg-dark bg-opacity-75 rounded px-2 py-1">{{ foto.descricao }}</p>
+                      </div>
+                    {% endif %}
+                  </div>
+                {% endfor %}
+              </div>
+              
+              {% if fotos.count > 1 %}
+                <button class="carousel-control-prev" type="button" data-bs-target="#carouselFotos" data-bs-slide="prev">
+                  <span class="carousel-control-prev-icon"></span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#carouselFotos" data-bs-slide="next">
+                  <span class="carousel-control-next-icon"></span>
+                </button>
+              {% endif %}
+            </div>
+
+            <!-- Miniaturas -->
+            {% if fotos.count > 1 %}
+              <div class="row g-2 p-3">
+                {% for foto in fotos %}
+                  <div class="col-2">
+                    <img src="{{ foto.foto.url }}" 
+                         class="img-thumbnail miniatura-foto {% if forloop.first %}active{% endif %}" 
+                         alt="{{ foto.descricao|default:carro.nome_completo }}"
+                         data-bs-target="#carouselFotos" 
+                         data-bs-slide-to="{{ forloop.counter0 }}"
+                         style="height: 80px; object-fit: cover; cursor: pointer;">
+                  </div>
+                {% endfor %}
+              </div>
+            {% endif %}
+          {% else %}
+            <img src="https://via.placeholder.com/800x400?text=Sem+Fotos+Disponíveis" 
+                 class="img-fluid" alt="{{ carro.nome_completo }}"
+                 style="height: 400px; object-fit: cover; width: 100%;">
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Especificações Técnicas -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="fas fa-cogs me-2"></i>Especificações Técnicas
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            {% for label, valor in especificacoes.items %}
+              <div class="col-md-6 mb-3">
+                <div class="d-flex justify-content-between border-bottom pb-1">
+                  <strong>{{ label }}:</strong>
+                  <span>{{ valor }}</span>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Opcionais/Equipamentos -->
+      {% if opcionais_por_categoria %}
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5 class="mb-0">
+              <i class="fas fa-plus-circle me-2"></i>Equipamentos e Opcionais
+            </h5>
+          </div>
+          <div class="card-body">
+            {% for categoria, opcionais in opcionais_por_categoria.items %}
+              <div class="mb-4">
+                <h6 class="text-primary border-bottom pb-2">{{ categoria }}</h6>
+                <div class="row">
+                  {% for opcional in opcionais %}
+                    <div class="col-md-6 mb-2">
+                      <div class="d-flex align-items-center">
+                        <i class="fas fa-check text-success me-2"></i>
+                        <span>{{ opcional.nome }}</span>
+                        {% if opcional.descricao %}
+                          <i class="fas fa-info-circle text-muted ms-2" 
+                             data-bs-toggle="tooltip" 
+                             title="{{ opcional.descricao }}"></i>
+                        {% endif %}
+                      </div>
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+
+      <!-- Descrição -->
+      {% if carro.descricao %}
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5 class="mb-0">
+              <i class="fas fa-file-alt me-2"></i>Descrição
+            </h5>
+          </div>
+          <div class="card-body">
+            <p class="mb-0">{{ carro.descricao|linebreaks }}</p>
+          </div>
+        </div>
+      {% endif %}
+
+      <!-- Documentação (apenas para staff) -->
+      {% if documentacao and user.is_staff %}
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5 class="mb-0">
+              <i class="fas fa-file-contract me-2"></i>Documentação
+              <span class="badge bg-warning ms-2">Staff Only</span>
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              {% for label, valor in documentacao.items %}
+                <div class="col-md-6 mb-2">
+                  <div class="d-flex justify-content-between">
+                    <strong>{{ label }}:</strong>
+                    <span class="font-monospace">{{ valor }}</span>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Sidebar de Informações -->
+    <div class="col-lg-4">
+      <!-- Informações Principais -->
+      <div class="card mb-4">
+        <div class="card-body">
+          <h3 class="card-title">{{ carro.nome_completo }}</h3>
+          
+          <div class="mb-3">
+            <span class="badge bg-{{ carro.condicao|yesno:'success,primary' }} me-2">
+              {{ carro.get_condicao_display }}
+            </span>
+            <span class="badge bg-info">{{ carro.cor.nome }}</span>
+          </div>
+
+          <!-- Preços -->
+          {% if disponibilidades.venda and disponibilidades.preco_venda %}
+            <div class="mb-3">
+              <h4 class="text-primary mb-0">
+                <i class="fas fa-tag me-2"></i>
+                {{ disponibilidades.preco_venda|floatformat:0 }} Kz
+              </h4>
+              <small class="text-muted">Preço de venda</small>
+            </div>
+          {% endif %}
+
+          {% if disponibilidades.aluguel and disponibilidades.preco_aluguel %}
+            <div class="mb-3">
+              <h5 class="text-secondary mb-0">
+                <i class="fas fa-calendar-alt me-2"></i>
+                {{ disponibilidades.preco_aluguel|floatformat:0 }} Kz/dia
+              </h5>
+              <small class="text-muted">Preço de aluguel diário</small>
+            </div>
+          {% endif %}
+
+          <!-- Informações Rápidas -->
+          <div class="mb-4">
+            <div class="row text-center">
+              <div class="col-4">
+                <div class="border rounded p-2">
+                  <i class="fas fa-calendar text-primary"></i>
+                  <div class="small fw-bold">{{ carro.ano_modelo }}</div>
+                  <div class="x-small text-muted">Ano</div>
+                </div>
+              </div>
+              <div class="col-4">
+                <div class="border rounded p-2">
+                  <i class="fas fa-road text-primary"></i>
+                  <div class="small fw-bold">{{ carro.quilometragem|floatformat:0 }}</div>
+                  <div class="x-small text-muted">KM</div>
+                </div>
+              </div>
+              <div class="col-4">
+                <div class="border rounded p-2">
+                  <i class="fas fa-gas-pump text-primary"></i>
+                  <div class="small fw-bold">{{ carro.get_combustivel_display }}</div>
+                  <div class="x-small text-muted">Combustível</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Botões de Ação -->
+          <div class="d-grid gap-2">
+            {% if disponibilidades.venda %}
+              <button class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#modalContato">
+                <i class="fas fa-shopping-cart me-2"></i>Comprar
+              </button>
+            {% endif %}
+            
+            {% if disponibilidades.aluguel %}
+              <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalContato">
+                <i class="fas fa-calendar-alt me-2"></i>Alugar
+              </button>
+            {% endif %}
+
+            <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modalContato">
+              <i class="fas fa-phone me-2"></i>Falar com Vendedor
+            </button>
+
+            <button class="btn btn-outline-info" onclick="compartilhar()">
+              <i class="fas fa-share-alt me-2"></i>Compartilhar
+            </button>
+          </div>
+
+          <!-- Informações de Entrada -->
+          <div class="mt-4 pt-3 border-top">
+            <small class="text-muted">
+              <i class="fas fa-clock me-1"></i>
+              Adicionado em {{ carro.data_entrada|date:"d/m/Y" }}
+            </small>
+            {% if carro.data_atualizacao != carro.data_entrada %}
+              <br>
+              <small class="text-muted">
+                <i class="fas fa-sync me-1"></i>
+                Atualizado em {{ carro.data_atualizacao|date:"d/m/Y" }}
+              </small>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Informações de Contato -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <h6 class="mb-0">
+            <i class="fas fa-store me-2"></i>Informações da Loja
+          </h6>
+        </div>
+        <div class="card-body">
+          <div class="mb-2">
+            <i class="fas fa-map-marker-alt text-primary me-2"></i>
+            <strong>Endereço:</strong><br>
+            <small class="text-muted">Rua Principal, 123<br>Luanda, Angola</small>
+          </div>
+          <div class="mb-2">
+            <i class="fas fa-phone text-primary me-2"></i>
+            <strong>Telefone:</strong><br>
+            <small>+244 XXX XXX XXX</small>
+          </div>
+          <div class="mb-2">
+            <i class="fas fa-envelope text-primary me-2"></i>
+            <strong>Email:</strong><br>
+            <small>contato@concessionaria.ao</small>
+          </div>
+          <div>
+            <i class="fas fa-clock text-primary me-2"></i>
+            <strong>Horário:</strong><br>
+            <small class="text-muted">
+              Seg-Sex: 8h às 18h<br>
+              Sáb: 8h às 14h
+            </small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Carros Relacionados -->
+  {% if carros_relacionados %}
+    <div class="row mt-5">
+      <div class="col-12">
+        <h4 class="mb-4">
+          <i class="fas fa-cars me-2"></i>Carros Similares
+        </h4>
+        <div class="row">
+          {% for carro_rel in carros_relacionados %}
+            <div class="col-md-3 mb-4">
+              <div class="card h-100">
+                {% with foto=carro_rel.fotos.all|first %}
+                  {% if foto %}
+                    <img src="{{ foto.foto.url }}" class="card-img-top" 
+                         alt="{{ carro_rel.nome_completo }}" 
+                         style="height: 150px; object-fit: cover;">
+                  {% else %}
+                    <img src="https://via.placeholder.com/300x150?text=Sem+Foto" 
+                         class="card-img-top" alt="{{ carro_rel.nome_completo }}" 
+                         style="height: 150px; object-fit: cover;">
+                  {% endif %}
+                {% endwith %}
+                <div class="card-body">
+                  <h6 class="card-title">{{ carro_rel.nome_completo }}</h6>
+                  <p class="card-text">
+                    <small class="text-muted">
+                      {{ carro_rel.ano_modelo }} • {{ carro_rel.quilometragem|floatformat:0 }} km
+                    </small>
+                  </p>
+                  {% if carro_rel.preco_venda %}
+                    <h6 class="text-primary">{{ carro_rel.preco_venda|floatformat:0 }} Kz</h6>
+                  {% endif %}
+                  <a href="{% url 'website:carro_detailhe' carro_rel.pk %}" class="btn btn-outline-primary btn-sm">
+                    Ver Detalhes
+                  </a>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  {% endif %}
+</main>
+
+<!-- Modal de Contato -->
+<div class="modal fade" id="modalContato" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Entre em Contato</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p>Entre em contato conosco para mais informações sobre este veículo:</p>
+        <p><strong>{{ carro.nome_completo }}</strong></p>
+        
+        <div class="mb-3">
+          <strong>Telefone:</strong> +244 912 345 678
+        </div>
+        <div class="mb-3">
+          <strong>WhatsApp:</strong> 
+          <a href="https://wa.me/244XXXXXXXXX?text=Olá! Tenho interesse no {{ carro.nome_completo }}" 
+             class="btn btn-success btn-sm" target="_blank">
+            <i class="fab fa-whatsapp me-1"></i>Enviar Mensagem
+          </a>
+        </div>
+        <div class="mb-3">
+          <strong>Email:</strong> contacto@concessionaria.ao
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Aluguel -->
+<div class="modal fade" id="modalAluguel" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Aluguel de Veículo</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p>Solicite um orçamento para aluguel:</p>
+        <p><strong>{{ carro.nome_completo }}</strong></p>
+        <p><strong>Valor diário:</strong> {{ disponibilidades.preco_aluguel|floatformat:0 }} Kz</p>
+        
+        <form>
+          <div class="mb-3">
+            <label class="form-label">Data de Retirada</label>
+            <input type="date" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Data de Devolução</label>
+            <input type="date" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Nome Completo</label>
+            <input type="text" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Telefone</label>
+            <input type="tel" class="form-control" required>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary">Solicitar Orçamento</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Função para compartilhar
+function compartilhar() {
+  if (navigator.share) {
+    navigator.share({
+      title: '{{ meta_title }}',
+      text: '{{ meta_description }}',
+      url: window.location.href
+    });
+  } else {
+    // Fallback para navegadores que não suportam Web Share API
+    navigator.clipboard.writeText(window.location.href).then(() => {
+      alert('Link copiado para a área de transferência!');
+    });
+  }
+}
+
+// Inicializar tooltips
+document.addEventListener('DOMContentLoaded', function() {
+  var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+  var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl);
+  });
+  
+  // Sincronizar miniaturas com carousel
+  document.querySelectorAll('.miniatura-foto').forEach(function(miniatura) {
+    miniatura.addEventListener('click', function() {
+      document.querySelectorAll('.miniatura-foto').forEach(m => m.classList.remove('active'));
+      this.classList.add('active');
+    });
+  });
+});
+</script>
+{% endblock %}

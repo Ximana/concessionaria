@@ -1,0 +1,96 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login - AutoPrime</title>
+  <link href="{% static 'core/css/bootstrap.min.css' %}" rel="stylesheet" />
+  <link href="{% static 'core/css/all.min.css' %}" rel="stylesheet" />
+  <style>
+    html, body {
+      height: 100%;
+    }
+
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #f4f4f4;
+    }
+
+    .login-container {
+      background: white;
+      padding: 40px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .form-control:focus {
+      box-shadow: none;
+      border-color: #dc3545;
+    }
+
+    .btn-danger {
+      width: 100%;
+    }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .logo img {
+      max-height: 50px;
+    }
+
+    .alert {
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="login-container">
+    <div class="logo">
+      <img src="{% static 'core/img/logo.png' %}" alt="AutoBid Logo">
+    </div>
+    <h4 class="text-center mb-4">Acesso à Conta</h4>
+    
+    <!-- Exibição de mensagens -->
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+    
+    <!-- Formulário de Login -->
+    <form method="post">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label for="username" class="form-label">Usuário</label>
+        <input type="text" class="form-control" id="username" name="username" 
+               placeholder="Digite seu nome de usuário" required>
+      </div>
+      <div class="mb-3">
+        <label for="password" class="form-label">Senha</label>
+        <input type="password" class="form-control" id="password" name="password" 
+               placeholder="Digite sua senha" required>
+      </div>
+      <button type="submit" class="btn btn-danger">Entrar</button>
+      <div class="text-center mt-3">
+        <a href="#" class="text-decoration-none">Esqueceu a senha?</a>
+      </div>
+    </form>
+  </div>
+
+  <script src="{% static 'core/js/bootstrap.bundle.min.js' %}"></script>
+</body>
+
+</html>

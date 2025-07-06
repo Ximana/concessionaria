@@ -1,0 +1,513 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}{{ carro.nome_completo }} - Detalhes{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Cabeçalho com foto principal -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-body p-0">
+                    {% if foto_principal %}
+                        <img src="{{ foto_principal.foto.url }}" 
+                             alt="{{ carro.nome_completo }}" 
+                             class="img-fluid w-100 rounded"
+                             style="height: 400px; object-fit: cover;">
+                    {% else %}
+                        <div class="bg-light d-flex align-items-center justify-content-center rounded" style="height: 400px;">
+                            <div class="text-center text-muted">
+                                <i class="fas fa-car fa-5x mb-3"></i>
+                                <h5>Sem foto disponível</h5>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                    <h2 class="text-primary mb-0">{{ carro.nome_completo }}</h2>
+                    <p class="text-muted mb-2">{{ carro.cor.nome }} - {{ carro.get_condicao_display }}</p>
+                    <div class="d-flex gap-2 mb-3">
+                        {% if carro.disponivel_venda %}
+                        <span class="badge bg-primary">Disponível para Venda</span>
+                        {% endif %}
+                        {% if carro.disponivel_aluguel %}
+                        <span class="badge bg-info">Disponível para Aluguel</span>
+                        {% endif %}
+                        {% if not carro.disponivel_venda and not carro.disponivel_aluguel %}
+                        <span class="badge bg-secondary">Indisponível</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="btn-group">
+                    <a href="{% url 'administracao:lista_veiculos' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Voltar
+                    </a>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalEditar">
+                        <i class="fas fa-edit me-1"></i>Editar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Preços destacados -->
+            <div class="row mb-4">
+                {% if carro.preco_venda %}
+                <div class="col-md-6">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body text-center">
+                            <h4 class="mb-0">{{ preco_venda_formatado }}</h4>
+                            <small>Preço de Venda</small>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                {% if carro.preco_aluguel_diario %}
+                <div class="col-md-6">
+                    <div class="card bg-info text-white">
+                        <div class="card-body text-center">
+                            <h4 class="mb-0">{{ preco_aluguel_formatado }}</h4>
+                            <small>Aluguel por Dia</small>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Informações rápidas -->
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-title text-primary">Informações Rápidas</h6>
+                    <div class="row">
+                        <div class="col-6">
+                            <strong>Ano:</strong> {{ carro.ano_fabricacao }}/{{ carro.ano_modelo }}
+                        </div>
+                        <div class="col-6">
+                            <strong>Combustível:</strong> {{ carro.get_combustivel_display }}
+                        </div>
+                        <div class="col-6">
+                            <strong>Transmissão:</strong> {{ carro.get_transmissao_display }}
+                        </div>
+                        <div class="col-6">
+                            <strong>Quilometragem:</strong> {{ especificacoes.Quilometragem }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Abas de navegação -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <ul class="nav nav-tabs card-header-tabs" id="carroTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link text-white active" id="especificacoes-tab" data-bs-toggle="tab" 
+                            data-bs-target="#especificacoes" type="button" role="tab">
+                        <i class="fas fa-cogs me-1"></i>Especificações
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link text-white" id="fotos-tab" data-bs-toggle="tab" 
+                            data-bs-target="#fotos" type="button" role="tab">
+                        <i class="fas fa-images me-1"></i>Fotos ({{ fotos.count }})
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link text-white" id="opcionais-tab" data-bs-toggle="tab" 
+                            data-bs-target="#opcionais" type="button" role="tab">
+                        <i class="fas fa-plus-circle me-1"></i>Opcionais ({{ opcionais.count }})
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link text-white" id="documentacao-tab" data-bs-toggle="tab" 
+                            data-bs-target="#documentacao" type="button" role="tab">
+                        <i class="fas fa-file-alt me-1"></i>Documentação
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link text-white" id="descricao-tab" data-bs-toggle="tab" 
+                            data-bs-target="#descricao" type="button" role="tab">
+                        <i class="fas fa-info-circle me-1"></i>Descrição
+                    </button>
+                </li>
+            </ul>
+        </div>
+        <div class="card-body">
+            <div class="tab-content" id="carroTabContent">
+                <!-- Aba Especificações -->
+                <div class="tab-pane fade show active" id="especificacoes" role="tabpanel">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5 class="text-primary mb-3">Especificações Técnicas</h5>
+                            <table class="table table-striped">
+                                {% for key, value in especificacoes.items %}
+                                <tr>
+                                    <td><strong>{{ key }}:</strong></td>
+                                    <td>{{ value }}</td>
+                                </tr>
+                                {% endfor %}
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h5 class="text-primary mb-3">Disponibilidade</h5>
+                            <div class="row">
+                                <div class="col-6">
+                                    <div class="card {% if disponibilidade.venda %}bg-primary{% else %}bg-secondary{% endif %} text-white">
+                                        <div class="card-body text-center">
+                                            <i class="fas {% if disponibilidade.venda %}fa-check{% else %}fa-times{% endif %} fa-2x mb-2"></i>
+                                            <h6>Venda</h6>
+                                            <small>{% if disponibilidade.venda %}Disponível{% else %}Indisponível{% endif %}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="card {% if disponibilidade.aluguel %}bg-info{% else %}bg-secondary{% endif %} text-white">
+                                        <div class="card-body text-center">
+                                            <i class="fas {% if disponibilidade.aluguel %}fa-check{% else %}fa-times{% endif %} fa-2x mb-2"></i>
+                                            <h6>Aluguel</h6>
+                                            <small>{% if disponibilidade.aluguel %}Disponível{% else %}Indisponível{% endif %}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4">
+                                <h6 class="text-primary">Informações de Sistema</h6>
+                                <p class="text-muted mb-1">
+                                    <strong>Data de Entrada:</strong> {{ carro.data_entrada|date:"d/m/Y H:i" }}
+                                </p>
+                                <p class="text-muted mb-0">
+                                    <strong>Última Atualização:</strong> {{ carro.data_atualizacao|date:"d/m/Y H:i" }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Aba Fotos -->
+                <div class="tab-pane fade" id="fotos" role="tabpanel">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="text-primary mb-0">Galeria de Fotos</h5>
+                        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalAdicionarFoto">
+                            <i class="fas fa-plus me-1"></i>Adicionar Foto
+                        </button>
+                    </div>
+                    
+                    {% if fotos %}
+                    <div class="row" id="galeria-fotos">
+                        {% for foto in fotos %}
+                        <div class="col-md-3 mb-3" data-foto-id="{{ foto.id }}">
+                            <div class="card">
+                                <div class="position-relative">
+                                    <img src="{{ foto.foto.url }}" alt="{{ foto.descricao }}" 
+                                         class="card-img-top" style="height: 200px; object-fit: cover;">
+                                    {% if foto.foto_principal %}
+                                    <span class="position-absolute top-0 start-0 badge bg-primary m-2">Principal</span>
+                                    {% endif %}
+                                    <div class="position-absolute top-0 end-0 m-2">
+                                        <div class="btn-group">
+                                            {% if not foto.foto_principal %}
+                                            <form method="post" class="d-inline">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="foto_id" value="{{ foto.id }}">
+                                                <button type="submit" name="definir_principal" 
+                                                        class="btn btn-sm btn-warning" title="Definir como principal">
+                                                    <i class="fas fa-star"></i>
+                                                </button>
+                                            </form>
+                                            {% endif %}
+                                            <form method="post" class="d-inline" 
+                                                  onsubmit="return confirm('Tem certeza que deseja remover esta foto?')">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="foto_id" value="{{ foto.id }}">
+                                                <button type="submit" name="remover_foto" 
+                                                        class="btn btn-sm btn-danger" title="Remover foto">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card-body p-2">
+                                    <small class="text-muted">
+                                        {{ foto.descricao|default:"Sem descrição" }}
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-images fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Nenhuma foto adicionada</h5>
+                        <p class="text-muted">Adicione fotos para mostrar melhor este veículo.</p>
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalAdicionarFoto">
+                            <i class="fas fa-plus me-1"></i>Adicionar Primeira Foto
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Aba Opcionais -->
+                <div class="tab-pane fade" id="opcionais" role="tabpanel">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="text-primary mb-0">Opcionais do Veículo</h5>
+                            </div>
+                            {% if opcionais %}
+                            <div class="list-group">
+                                {% for opcional in opcionais %}
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>{{ opcional.nome }}</strong>
+                                        {% if opcional.descricao %}
+                                        <br><small class="text-muted">{{ opcional.descricao }}</small>
+                                        {% endif %}
+                                    </div>
+                                    <form method="post" class="d-inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="opcional_id" value="{{ opcional.id }}">
+                                        <button type="submit" name="remover_opcional" 
+                                                class="btn btn-sm btn-outline-danger"
+                                                onclick="return confirm('Remover este opcional?')">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <div class="text-center py-3">
+                                <i class="fas fa-plus-circle fa-2x text-muted mb-2"></i>
+                                <p class="text-muted">Nenhum opcional adicionado</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <h5 class="text-primary mb-3">Adicionar Opcionais</h5>
+                            {% if opcionais_disponiveis %}
+                            <form method="post">
+                                {% csrf_token %}
+                                <div class="input-group mb-3">
+                                    <select name="opcional_id" class="form-select" required>
+                                        <option value="">Selecione um opcional</option>
+                                        {% for opcional in opcionais_disponiveis %}
+                                        <option value="{{ opcional.id }}">{{ opcional.nome }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <button type="submit" name="adicionar_opcional" class="btn btn-primary">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                            </form>
+                            {% else %}
+                            <p class="text-muted">Todos os opcionais disponíveis já foram adicionados.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Aba Documentação -->
+                <div class="tab-pane fade" id="documentacao" role="tabpanel">
+                    <h5 class="text-primary mb-3">Documentação do Veículo</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-title">Identificação</h6>
+                                    <table class="table table-sm">
+                                        <tr>
+                                            <td><strong>Chassi:</strong></td>
+                                            <td>{{ carro.chassi|default:"Não informado" }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Matrícula:</strong></td>
+                                            <td>{{ carro.matricula|default:"Não informado" }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Documento Único:</strong></td>
+                                            <td>{{ carro.documento_unico|default:"Não informado" }}</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-title">Status da Documentação</h6>
+                                    <div class="row">
+                                        <div class="col-4 text-center">
+                                            <div class="{% if carro.chassi %}text-primary{% else %}text-danger{% endif %}">
+                                                <i class="fas {% if carro.chassi %}fa-check-circle{% else %}fa-times-circle{% endif %} fa-2x"></i>
+                                                <br><small>Chassi</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-4 text-center">
+                                            <div class="{% if carro.matricula %}text-primary{% else %}text-danger{% endif %}">
+                                                <i class="fas {% if carro.matricula %}fa-check-circle{% else %}fa-times-circle{% endif %} fa-2x"></i>
+                                                <br><small>Matrícula</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-4 text-center">
+                                            <div class="{% if carro.documento_unico %}text-primary{% else %}text-danger{% endif %}">
+                                                <i class="fas {% if carro.documento_unico %}fa-check-circle{% else %}fa-times-circle{% endif %} fa-2x"></i>
+                                                <br><small>Doc. Único</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Aba Descrição -->
+                <div class="tab-pane fade" id="descricao" role="tabpanel">
+                    <h5 class="text-primary mb-3">Descrição e Observações</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-title">Descrição</h6>
+                                    {% if carro.descricao %}
+                                        <p>{{ carro.descricao|linebreaks }}</p>
+                                    {% else %}
+                                        <p class="text-muted">Nenhuma descrição fornecida.</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-title">Observações Internas</h6>
+                                    {% if carro.observacoes %}
+                                        <p>{{ carro.observacoes|linebreaks }}</p>
+                                    {% else %}
+                                        <p class="text-muted">Nenhuma observação interna.</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar Carro -->
+<div class="modal fade" id="modalEditar" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form method="post">
+                {% csrf_token %}
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">Editar Veículo</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Aqui você pode incluir o formulário de edição -->
+                    <div class="row">
+                        <!-- Campos do formulário baseados no CarroRegistroForm -->
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.modelo.label_tag }}
+                                {{ form.modelo }}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.cor.label_tag }}
+                                {{ form.cor }}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.ano_fabricacao.label_tag }}
+                                {{ form.ano_fabricacao }}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.ano_modelo.label_tag }}
+                                {{ form.ano_modelo }}
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                {{ form.preco_venda.label_tag }}
+                                {{ form.preco_venda }}
+                            </div>
+                        </div>
+                        <!-- Adicione mais campos conforme necessário -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" name="atualizar_carro" class="btn btn-primary">Salvar Alterações</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Adicionar Foto -->
+<div class="modal fade" id="modalAdicionarFoto" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">Adicionar Foto</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="foto" class="form-label">Selecionar Foto</label>
+                        <input type="file" class="form-control" name="foto" accept="image/*" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="descricao_foto" class="form-label">Descrição (opcional)</label>
+                        <input type="text" class="form-control" name="descricao_foto" 
+                               placeholder="Descrição da foto">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" name="upload_foto" class="btn btn-primary">Adicionar Foto</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scriptJS %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Inicializar tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // Funcionalidade para reordenar fotos (se necessário)
+    // Aqui você pode adicionar funcionalidade de drag-and-drop para reordenar fotos
+});
+
+// Função para confirmar exclusão
+function confirmarExclusao(item, url) {
+    if (confirm(`Tem certeza que deseja excluir ${item}?`)) {
+        window.location.href = url;
+    }
+}
+</script>
+{% endblock %}
