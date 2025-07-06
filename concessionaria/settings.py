@@ -1,29 +1,70 @@
-import os
 from pathlib import Path
+from decouple import config
+import os
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-^c6wmx9_joaik=j*auv9=tt(le$l6@f9kau-6sc*eb^negqwzw'
+SECRET_KEY = config('SECRET_KEY', default='django-insecure-^-6ah+(wse+(!c#)xk9^(us%dc&(5w3*%zf_2hr^002t-vxvn5')
 
-DEBUG = True
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['.onrender.com', '127.0.0.1']
+
+# Configuração do Cloudinary 
+
+# Para compatibilidade com versões anteriores (opcional)
+cloudinary.config(
+    cloud_name=config('CLOUDINARY_CLOUD_NAME'),
+    api_key=config('CLOUDINARY_API_KEY'),
+    api_secret=config('CLOUDINARY_API_SECRET'),
+    secure=True
+)
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': config('CLOUDINARY_CLOUD_NAME'),
+    'API_KEY': config('CLOUDINARY_API_KEY'),
+    'API_SECRET': config('CLOUDINARY_API_SECRET'),
+    'SECURE': True,
+}
+
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+
+# Configuração do storage padrão
+STORAGES = {
+    "default": {
+        "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+    },
+}
+
+# Arquivos de Media
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
 
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'django.contrib.staticfiles',
     
     # Apps de terceiros
+    'cloudinary_storage',
+    'django.contrib.staticfiles',
+    'cloudinary',
+
     'django_filters',
     'crispy_forms',
-    'crispy_bootstrap5', 
+    'crispy_bootstrap5',
     
     # Apps locais
     'apps.core',
@@ -36,6 +77,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -104,14 +146,11 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATICFILES_DIRS = [
-    #os.path.join(BASE_DIR, 'static'),
-    os.path.join(BASE_DIR, 'apps', 'core', 'static'),
-    ]
 
-# Configuração para diretorio de media
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+# Configuração mais robusta para STATICFILES_DIRS
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'apps', 'core', 'static'),
+]
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -119,8 +158,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Authentication settings
 AUTH_USER_MODEL = 'usuarios.Usuario'
 LOGIN_URL = 'usuarios:login'
-LOGIN_REDIRECT_URL = 'veiculos:lista'
-LOGOUT_REDIRECT_URL = 'veiculos:lista'
+LOGIN_REDIRECT_URL = 'administracao:lista_veiculos'
+LOGOUT_REDIRECT_URL = 'administracao:lista_veiculos'
 
 # Crispy Forms settings
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"

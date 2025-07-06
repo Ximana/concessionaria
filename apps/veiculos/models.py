@@ -11,8 +11,9 @@ def carro_foto_path(instance, filename):
     """Caminho para upload de fotos dos carros"""
     ext = filename.split('.')[-1]
     filename = f'{uuid.uuid4().hex}.{ext}'
-    return os.path.join('carros/fotos', filename)
-
+    return f'projectos/django/concessionaria/media/carros/fotos/{filename}'
+    #return os.path.join('carros/fotos', filename)
+    
 class Marca(models.Model):
     """Modelo para marcas de carros"""
     

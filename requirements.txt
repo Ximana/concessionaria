@@ -1,4 +1,8 @@
+# Django principal
 Django==5.1.5
+
+# Variáveis de ambiente (configurações seguras)
+python-decouple==3.8
 
 # Gunicorn para deploy em produção (Render)
 gunicorn==22.0.0

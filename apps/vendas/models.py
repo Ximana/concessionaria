@@ -9,7 +9,8 @@ def documento_venda_path(instance, filename):
     """Caminho para upload de documentos de venda"""
     ext = filename.split('.')[-1]
     filename = f'{uuid.uuid4().hex}.{ext}'
-    return os.path.join('vendas/documentos', filename)
+    return f'projectos/django/concessionaria/media/vendas/documentos/{filename}'
+    #return os.path.join('vendas/documentos', filename)
 
 class Venda(models.Model):
     """Modelo para vendas de carros"""
