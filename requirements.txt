@@ -16,3 +16,7 @@ crispy-bootstrap5==2024.10
 
 # HTTP requests (caso uses APIs externas)
 requests==2.32.3
+
+# Armazenamento Cloudinary
+cloudinary==1.44.0
+django-cloudinary-storage==0.3.0
